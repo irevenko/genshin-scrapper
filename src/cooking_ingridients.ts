@@ -1,24 +1,11 @@
 import fs from 'fs';
-import axios from 'axios';
 import cheerio from 'cheerio';
 import request from 'request';
 import webp from 'webp-converter';
 import { IIngredient } from './types';
+import { BASE_URL, INGREDIENTS_URL, fetchPage } from './utils';
 
-const INGREDIENTS_URL =
-  'https://genshin-impact.fandom.com/wiki/Category:Cooking_Ingredient';
-const BASE_URL = 'https://genshin-impact.fandom.com/wiki/';
-
-const fetchPage = async (url: string) => {
-  try {
-    const result = await axios.get(url);
-    return result.data;
-  } catch (err) {
-    return err;
-  }
-};
-
-const ingredientsNames = async () => {
+const getIngredientsNames = async () => {
   try {
     const html = await fetchPage(INGREDIENTS_URL);
     const $ = cheerio.load(html);
@@ -41,7 +28,7 @@ const ingredientsNames = async () => {
   }
 };
 
-const ingredientsInfo = async (names: Array<string>) => {
+const getIngredientsInfo = async (names: Array<string>) => {
   let info: IIngredient = {};
 
   for (const element of names) {
@@ -91,7 +78,7 @@ const ingredientsInfo = async (names: Array<string>) => {
   return info;
 };
 
-const ingredientsImages = async (names: Array<string>) => {
+const getIngredientsImages = async (names: Array<string>) => {
   const images: Array<string> = [];
 
   for (const element of names) {
@@ -189,9 +176,9 @@ if (!fs.existsSync('./images/cooking_ingredients/webp')) {
 }
 
 (async () => {
-  const names = await ingredientsNames();
-  const images = await ingredientsImages(names);
-  const ingredients = await ingredientsInfo(names);
+  const names = await getIngredientsNames();
+  const images = await getIngredientsImages(names);
+  const ingredients = await getIngredientsInfo(names);
 
   downloadAll(images, names);
   convertToWebp(names);
