@@ -1,5 +1,6 @@
 # genshin-scrapper 💾
 > A bunch of scripts that parse Genshin Impact data for api.genshin.dev
+
 scrapping - https://genshin-impact.fandom.com
 
 # What I Learned 🧠

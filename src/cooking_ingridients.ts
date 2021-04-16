@@ -30,11 +30,11 @@ const ingredientsNames = async () => {
       names.push(name);
     });
 
-    const filteredNames = names.filter(function(value, index, arr){ 
-      return value !== "Category:Processing";
+    const filteredNames = names.filter(function (value, index, arr) {
+      return value !== 'Category:Processing';
     });
 
-    console.log('Fetched ingredients names')
+    console.log('Fetched ingredients names');
     return filteredNames;
   } catch (error) {
     throw error;
@@ -114,43 +114,52 @@ const ingredientsImages = async (names: Array<string>) => {
       throw error;
     }
   }
-  console.log('Downloaded ingredients images')
+  console.log('Downloaded ingredients images');
   return images;
 };
 
 const downloadImage = (url, path, callback) => {
   request.head(url, (err, res, body) => {
-    request(url)
-      .pipe(fs.createWriteStream(path))
-      .on('close', callback);
+    request(url).pipe(fs.createWriteStream(path)).on('close', callback);
   });
-}
+};
 
-const downloadAll = (links: Array<string>, names: Array<string>) => { 
+const downloadAll = (links: Array<string>, names: Array<string>) => {
   for (let i = 0; i < links.length; i += 1) {
-    downloadImage(links[i], `./images/cooking_ingredients/${names[i]}.png`, () => {
-      console.log(`downloaded ${links[i]}`);
-    });
+    downloadImage(
+      links[i],
+      `./images/cooking_ingredients/${names[i]}.png`,
+      () => {
+        console.log(`downloaded ${links[i]}`);
+      }
+    );
   }
-}
+};
 
-const convertToWebp = (names: Array<string>) => { 
+const convertToWebp = (names: Array<string>) => {
   webp.grant_permission();
 
-  for (const name of names) { 
-    webp.cwebp("./images/cooking_ingredients/"+name+".png", "./images/cooking_ingredients/webp/"+name+".webp","-q 80");
+  for (const name of names) {
+    webp.cwebp(
+      './images/cooking_ingredients/' + name + '.png',
+      './images/cooking_ingredients/webp/' + name + '.webp',
+      '-q 80'
+    );
   }
   console.log('Converted ingredients images');
-}
+};
 
-const renameImages = (names: Array<string>) => { 
-  for (let name of names) { 
-    const newName = name.replace(/ /g,"-");
+const renameImages = (names: Array<string>) => {
+  for (let name of names) {
+    const newName = name.replace(/ /g, '-');
 
-    fs.renameSync('./images/cooking_ingredients/webp/'+name+'.webp', './images/cooking_ingredients/webp/'+newName.toLowerCase());
+    fs.renameSync(
+      './images/cooking_ingredients/webp/' + name + '.webp',
+      './images/cooking_ingredients/webp/' + newName.toLowerCase()
+    );
   }
   console.log('Renamed ingredients images');
-}
+};
 
 const exportResults = (results: IIngredient, outputFile: string) => {
   try {
@@ -167,25 +176,25 @@ const exportResults = (results: IIngredient, outputFile: string) => {
 
 if (!fs.existsSync('./data')) {
   fs.mkdirSync('./data');
-  console.log("Directory is created.");
+  console.log('Directory is created.');
 } else {
-  console.log("Directory already exists.");
+  console.log('Directory already exists.');
 }
 
 if (!fs.existsSync('./images/cooking_ingredients/webp')) {
   fs.mkdirSync('./images/cooking_ingredients/webp', { recursive: true });
-  console.log("Directory is created.");
+  console.log('Directory is created.');
 } else {
-  console.log("Directory already exists.");
+  console.log('Directory already exists.');
 }
 
 (async () => {
   const names = await ingredientsNames();
   const images = await ingredientsImages(names);
-  const ingridients = await ingredientsInfo(names);
+  const ingredients = await ingredientsInfo(names);
 
   downloadAll(images, names);
   convertToWebp(names);
   renameImages(names);
-  exportResults(ingridients, "./data/cooking-ingridient.json");
+  exportResults(ingredients, './data/cooking-ingredients.json');
 })();
