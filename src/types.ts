@@ -8,3 +8,14 @@ export interface IIngredientVals {
 export interface IIngredient {
   [key: string]: IIngredientVals;
 }
+
+
+export interface IPotionVals {
+  name: string;
+  effect: string;
+  rarity: number;
+}
+
+export interface IPotion {
+  [key: string]: IPotionVals;
+}

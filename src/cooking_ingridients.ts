@@ -3,7 +3,7 @@ import cheerio from 'cheerio';
 import request from 'request';
 import webp from 'webp-converter';
 import { IIngredient } from './types';
-import { BASE_URL, INGREDIENTS_URL, fetchPage } from './utils';
+import { BASE_URL, INGREDIENTS_URL, fetchPage, exportResults } from './utils';
 
 const getIngredientsNames = async () => {
   try {
@@ -56,14 +56,14 @@ const getIngredientsInfo = async (names: Array<string>) => {
 
         if (prevText.includes('Rarity')) {
           const rarity = $(el).prev().find('img').attr('alt');
-          info[element.toLowerCase()] = {
+          info[element.toLowerCase().replace(/ /g, '-')] = {
             name: element,
             description: description,
             rarity: parseInt(rarity!.charAt(0), 10),
             sources: sources,
           };
         } else {
-          info[element.toLowerCase()] = {
+          info[element.toLowerCase().replace(/ /g, '-')] = {
             name: element,
             description: description,
             sources: sources,
@@ -146,19 +146,6 @@ const renameImages = (names: Array<string>) => {
     );
   }
   console.log('Renamed ingredients images');
-};
-
-const exportResults = (results: IIngredient, outputFile: string) => {
-  try {
-    fs.writeFile(outputFile, JSON.stringify(results, null, 2), (err) => {
-      if (err) {
-        console.log(err);
-      }
-      console.log('Ingredients results exported successfully to ' + outputFile);
-    });
-  } catch (error) {
-    throw error;
-  }
 };
 
 if (!fs.existsSync('./data')) {
