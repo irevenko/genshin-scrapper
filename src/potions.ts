@@ -1,6 +1,6 @@
 import cheerio from 'cheerio';
 import { fetchPage, POTIONS_URL, BASE_URL, exportResults } from './utils';
-import { IPotion } from './types';
+import { IPotion, IPotionCraft } from './types';
 
 const getPotions = async () => {
   try {
@@ -23,43 +23,23 @@ const getPotions = async () => {
         };
        }
     });
-
+    console.log('Fetched potions data');
     return potions;
   } catch (error) {
     throw error;
   }
 };
 
-const getPotionNames = async () => {
-  try {
-    const html = await fetchPage(POTIONS_URL);
-    const $ = cheerio.load(html);
-
-    const names: Array<string> = [];
-
-    $('.article-table > tbody > tr').each(async (index, element) => {
-       const tds = $(element).find('td');       
-       const name = $(tds[1]).find('a').attr('title');
-       
-       if (name !== undefined) { 
-          names.push(name.trim())
-        };
-    });
-
-    return names;
-  } catch (error) {
-    throw error;
-  }
-};
-
-const getPotionsCraft = async (names: Array<string>) => {
-  for (const name of names) {
+const getPotionsCraft = async (potions: IPotion) => {
+  for (let potion in potions) {
     try {
-      const html = await fetchPage(BASE_URL+name);
+      const html = await fetchPage(BASE_URL+potions[potion].name);
       const $ = cheerio.load(html);
-    
+
+      const crafts: Array<IPotionCraft> = [];
+
       $('.genshin_recipe.hidden').each(async (index, element) => {
-         const divs = $(element).next().find('.mobileHide');       
+         const divs = $(element).next().find('.mobileHide');
 
          const item = $(divs[0]).find('a').attr('title');
          const itemCount = $(divs[0]).text().split(' ');
@@ -69,23 +49,26 @@ const getPotionsCraft = async (names: Array<string>) => {
 
          const mora = $(divs[2]).find('a').attr('title');
          const moraCount = $(divs[2]).text().split(' ');
-         
 
-         if (item !== undefined) { 
-           console.log(item + " " + itemCount[1]);
-           console.log(item2 + " " + itemCount2[1]);
-           console.log(mora + " " + moraCount[1]);
-           console.log('--------------------------')
-         }
+         if (item !== undefined) {
+           crafts.push({item: item, quantity: parseInt(itemCount[1], 10)})
+           crafts.push({item: item2, quantity: parseInt(itemCount2[1], 10)})
+           crafts.push({item: mora, quantity: parseInt(moraCount[1], 10)})
+          }
+
+          potions[potion].crafring = crafts;
       });
-  
     } catch (error) {
       throw error;
     }
   }
+  console.log('Fetched potion crafts');
+  return potions;
 };
 
 (async () => {
-  const names = await getPotionNames();
-  const potions = await getPotionsCraft(names);
+  const potions = await getPotions();
+  const allPotions = await getPotionsCraft(potions);
+
+  await exportResults(allPotions, "./data/potions.json")
 })();

@@ -14,6 +14,12 @@ export interface IPotionVals {
   name: string;
   effect: string;
   rarity: number;
+  crafring?: Array<IPotionCraft>
+}
+
+export interface IPotionCraft {
+  item: string;
+  quantity: number;
 }
 
 export interface IPotion {
