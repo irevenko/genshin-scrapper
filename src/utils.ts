@@ -1,3 +1,4 @@
+import request from 'request';
 import axios from 'axios';
 import fs from 'fs';
 
@@ -30,4 +31,10 @@ export const exportResults = (results: any, outputFile: string) => {
   } catch (error) {
     throw error;
   }
+};
+
+export const downloadImage = (url, path, callback) => {
+  request.head(url, (err, res, body) => {
+    request(url).pipe(fs.createWriteStream(path)).on('close', callback);
+  });
 };

@@ -1,9 +1,9 @@
 import fs from 'fs';
 import cheerio from 'cheerio';
-import request from 'request';
 import webp from 'webp-converter';
 import { IIngredient } from './types';
-import { BASE_URL, INGREDIENTS_URL, fetchPage, exportResults } from './utils';
+import { BASE_URL, INGREDIENTS_URL, fetchPage, exportResults, downloadImage } from './utils';
+
 
 const getIngredientsNames = async () => {
   try {
@@ -105,13 +105,7 @@ const getIngredientsImages = async (names: Array<string>) => {
   return images;
 };
 
-const downloadImage = (url, path, callback) => {
-  request.head(url, (err, res, body) => {
-    request(url).pipe(fs.createWriteStream(path)).on('close', callback);
-  });
-};
-
-const downloadAll = (links: Array<string>, names: Array<string>) => {
+const downloadIngredientsImages = (links: Array<string>, names: Array<string>) => {
   for (let i = 0; i < links.length; i += 1) {
     downloadImage(
       links[i],
@@ -167,7 +161,7 @@ if (!fs.existsSync('./images/cooking_ingredients/webp')) {
   const images = await getIngredientsImages(names);
   const ingredients = await getIngredientsInfo(names);
 
-  downloadAll(images, names);
+  downloadIngredientsImages(images, names);
   convertToWebp(names);
   renameImages(names);
   exportResults(ingredients, './data/cooking-ingredients.json');

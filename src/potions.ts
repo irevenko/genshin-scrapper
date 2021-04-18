@@ -1,6 +1,8 @@
 import cheerio from 'cheerio';
-import { fetchPage, POTIONS_URL, BASE_URL, exportResults } from './utils';
+import { fetchPage, POTIONS_URL, BASE_URL, exportResults, downloadImage } from './utils';
 import { IPotion, IPotionCraft } from './types';
+import webp from 'webp-converter';
+import fs from 'fs';
 
 const getPotions = async () => {
   try {
@@ -66,9 +68,81 @@ const getPotionsCraft = async (potions: IPotion) => {
   return potions;
 };
 
+const getPotionsImages = async (potions: IPotion) => {
+  const images: Array<string> = [];
+
+  for (const potion in potions) {
+    try {
+      const html = await fetchPage(BASE_URL + potions[potion].name);
+      const $ = cheerio.load(html);
+
+      $('.portable-infobox').each((i, el) => {
+        const image = $(el)
+          .find('.pi-image-collection > div > figure > a')
+          .attr('href');
+        if (image === undefined) {
+          const newImage = $(el).find('figure > a').attr('href');
+          images.push(newImage);
+        } else {
+          images.push(image);
+        }
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+  console.log('Downloaded ingredients images');
+  return images;
+};
+
+const downloadPotionsImages = (links: Array<string>, potions: IPotion) => {
+  let linkCounter = 0;
+
+  for (const potion in potions) {
+    downloadImage(
+      links[linkCounter],
+      `./images/potions/${potions[potion].name}.png`,
+      () => {
+        console.log(`downloaded ${links[linkCounter]}`);
+      }
+    );
+    linkCounter += 1;
+  }
+};
+
+const convertToWebp = (potions: IPotion) => {
+  webp.grant_permission();
+
+  for (const potion in potions) {
+    webp.cwebp(
+      './images/potions/' + potions[potion].name + '.png',
+      './images/potions/webp/' + potions[potion].name + '.webp',
+      '-q 80'
+    );
+  }
+  console.log('Converted potions images');
+};
+
+const renameImages = (potions: IPotion) => {
+  for (let potion in potions) {
+    const newName = potions[potion].name.replace(/ /g, '-');
+
+    fs.renameSync(
+      './images/potions/webp/' + potions[potion].name + '.webp',
+      './images/potions/webp/' + newName.toLowerCase()
+    );
+  }
+  console.log('Renamed potions images');
+};
+
 (async () => {
   const potions = await getPotions();
+  const images = await getPotionsImages(potions);
   const allPotions = await getPotionsCraft(potions);
 
-  await exportResults(allPotions, "./data/potions.json")
+
+  downloadPotionsImages(images, potions);
+  convertToWebp(potions);
+  renameImages(potions);
+  exportResults(allPotions, "./data/potions.json")
 })();
