@@ -8,7 +8,10 @@ export const INGREDIENTS_URL =
 export const POTIONS_URL =
   'https://genshin-impact.fandom.com/wiki/Potions';
 
+export const FOOD_URL = 'https://genshin-impact.fandom.com/wiki/Food';
+
 export const BASE_URL = 'https://genshin-impact.fandom.com/wiki/';
+
 
 
 export const fetchPage = async (url: string) => {
