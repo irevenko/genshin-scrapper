@@ -18,6 +18,11 @@ export interface IEventDishes {
   [key: string]: IEventDishesVals;
 }
 
+export interface ICraft {
+  item: string;
+  quantity: number;
+}
+
 export interface IIngredientVals {
   name: string;
   description: string;
@@ -29,12 +34,7 @@ export interface IPotionVals {
   name: string;
   effect: string;
   rarity: number;
-  crafring?: Array<IPotionCraft>
-}
-
-export interface IPotionCraft {
-  item: string;
-  quantity: number;
+  crafting?: Array<ICraft>
 }
 
 export interface IFoodVals {
@@ -42,7 +42,10 @@ export interface IFoodVals {
   type: string;
   effect: string;
   rarity: number;
+  description?: string;
+  proficiency?: number;
   hasRecipe?: boolean;
+  recipe?: Array<ICraft>
 }
 
 export interface ISpecialDishesVals {

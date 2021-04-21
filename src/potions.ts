@@ -58,7 +58,7 @@ const getPotionsCraft = async (potions: IPotion) => {
            crafts.push({item: mora, quantity: parseInt(moraCount[1], 10)})
           }
 
-          potions[potion].crafring = crafts;
+          potions[potion].crafting = crafts;
       });
     } catch (error) {
       throw error;

@@ -1,6 +1,6 @@
 import cheerio from 'cheerio';
 import { fetchPage, FOOD_URL, BASE_URL, exportResults, downloadImage } from './utils';
-import { IPotion, IPotionCraft, IFood, ISpecialDishes, IEventDishes } from './types';
+import { IPotion, ICraft, IFood, ISpecialDishes, IEventDishes } from './types';
 import webp from 'webp-converter';
 import fs from 'fs';
 
@@ -92,40 +92,46 @@ const getFood = async () => {
   }
 };
 
-const getFoodCraft = async (potions: IPotion) => {
-  for (let potion in potions) {
+const getFoodInfo = async (food: IFood) => {
+  for (let f in food) {
     try {
-      const html = await fetchPage(BASE_URL+potions[potion].name);
+      const html = await fetchPage(BASE_URL+food[f].name);
       const $ = cheerio.load(html);
 
-      const crafts: Array<IPotionCraft> = [];
+      const crafts: Array<ICraft> = [];
+
+      $('div[data-source="description"]').each(async (index, element) => {
+        const desc = $(element).text();
+        food[f].description = desc.trim();
+      });
+
+      $('div[data-source="rarity"] > div').each(async (index, element) => {
+        const proficiency = $(element).text();
+        if (proficiency.trim() !== '') { 
+          food[f].proficiency = parseInt(proficiency, 10);
+        }
+      });
 
       $('.genshin_recipe.hidden').each(async (index, element) => {
          const divs = $(element).next().find('.mobileHide');
 
-         const item = $(divs[0]).find('a').attr('title');
-         const itemCount = $(divs[0]).text().split(' ');
+         for (let i = 0; i < divs.length; i += 1 ) { 
+          const item = $(divs[i]).find('a').attr('title');
+          const itemCount = $(divs[i]).text().split(' ');
+          if (item !== undefined) {
+            crafts.push({item: item, quantity: parseInt(itemCount[1], 10)})
+          } 
+         }
 
-         const item2 = $(divs[1]).find('a').attr('title');
-         const itemCount2 = $(divs[1]).text().split(' ');
-
-         const mora = $(divs[2]).find('a').attr('title');
-         const moraCount = $(divs[2]).text().split(' ');
-
-         if (item !== undefined) {
-           crafts.push({item: item, quantity: parseInt(itemCount[1], 10)})
-           crafts.push({item: item2, quantity: parseInt(itemCount2[1], 10)})
-           crafts.push({item: mora, quantity: parseInt(moraCount[1], 10)})
-          }
-
-          potions[potion].crafring = crafts;
+         food[f].recipe = crafts;
       });
+
     } catch (error) {
       throw error;
     }
   }
   console.log('Fetched potion crafts');
-  return potions;
+  return food;
 };
 
 const getFoodImages = async (potions: IPotion) => {
@@ -197,13 +203,11 @@ const renameImages = (potions: IPotion) => {
 
 (async () => {
   const food = await getFood();
-  console.log(food[0])
   // const images = await getFoodImages(food);
-  // const allPotions = await getFoodCraft(food);
-
+  const allFood = await getFoodInfo(food[0]);
+  exportResults(allFood, "./data/food.json")
 
   // downloadFoodImages(images, food);
   // convertToWebp(food);
   // renameImages(food);
-  // exportResults(allPotions, "./data/food.json")
 })();
